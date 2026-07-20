@@ -92,4 +92,22 @@ class CategoryControllerTest {
 
     }
 
+    @Test
+    public void givenCreateCategoryRequestWithEmptyDescriptionWhenCreateCategoryRequestThenReturnCreateCategoryResponse() throws Exception {
+        final var validCreateCategoryRequest = new CreateCategoryRequest(TEST_CATEGORY_NAME, null);
+
+        final var expectedCreateCategoryResponse = new CreateCategoryResponse(TEST_CATEGORY_ID, TEST_CATEGORY_NAME, null);
+
+        when(categoryService.createCategory(validCreateCategoryRequest))
+                .thenReturn(expectedCreateCategoryResponse);
+
+        mockMvc.perform(post(CATEGORIES_API)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validCreateCategoryRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(TEST_CATEGORY_ID))
+                .andExpect(jsonPath("$.name").value(TEST_CATEGORY_NAME));
+
+    }
+
 }
