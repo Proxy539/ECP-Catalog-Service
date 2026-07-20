@@ -54,8 +54,7 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(BAD_REQUEST_ERROR))
                 .andExpect(jsonPath("$.error").value(VALIDATION_FAILED_MESSAGE))
-                .andExpect(jsonPath("$.errors.name").value(BLANK_NAME_VALIDATION_ERROR_MESSAGE))
-                .andExpect(jsonPath("$.errors.description").value(BLANK_CATEGORY_VALIDATION_ERROR_MESSAGE));
+                .andExpect(jsonPath("$.errors.name[0]").value(BLANK_NAME_VALIDATION_ERROR_MESSAGE));
     }
 
     @Test
@@ -69,8 +68,8 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(BAD_REQUEST_ERROR))
                 .andExpect(jsonPath("$.error").value(VALIDATION_FAILED_MESSAGE))
-                .andExpect(jsonPath("$.errors.name").value(LONG_CATEGORY_NAME_VALIDATION_ERROR_MESSAGE))
-                .andExpect(jsonPath("$.errors.description").value(LONG_CATEGORY_DESCRIPTION_VALIDATION_ERROR_MESSAGE));
+                .andExpect(jsonPath("$.errors.name[0]").value(LONG_CATEGORY_NAME_VALIDATION_ERROR_MESSAGE))
+                .andExpect(jsonPath("$.errors.description[0]").value(LONG_CATEGORY_DESCRIPTION_VALIDATION_ERROR_MESSAGE));
     }
 
     @Test

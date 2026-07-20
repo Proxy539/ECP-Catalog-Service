@@ -21,7 +21,7 @@ class CategoryServiceImplTest {
 
         assertThat(createCategoryResponse.id()).isNotEmpty();
         assertThat(createCategoryResponse.name()).isEqualTo(TEST_CATEGORY_NAME);
-        assertThat(createCategoryRequest.description()).isEqualTo(TEST_CATEGORY_DESCRIPTION);
+        assertThat(createCategoryResponse.description()).isEqualTo(TEST_CATEGORY_DESCRIPTION);
     }
 
 

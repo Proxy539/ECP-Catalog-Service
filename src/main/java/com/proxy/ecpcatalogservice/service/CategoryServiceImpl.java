@@ -5,14 +5,14 @@ import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
 import com.proxy.ecpcatalogservice.model.Category;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 class CategoryServiceImpl implements CategoryService {
 
-    private final Map<String, Category> categoryMap = new HashMap<>();
+    private final Map<String, Category> categoryMap = new ConcurrentHashMap<>();
 
     @Override
     public CreateCategoryResponse createCategory(CreateCategoryRequest createCategoryRequest) {
