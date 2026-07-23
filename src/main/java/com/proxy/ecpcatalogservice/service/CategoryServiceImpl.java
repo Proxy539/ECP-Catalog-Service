@@ -2,41 +2,29 @@ package com.proxy.ecpcatalogservice.service;
 
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
-import com.proxy.ecpcatalogservice.model.Category;
-import org.springframework.stereotype.Service;
+import com.proxy.ecpcatalogservice.mapper.CategoryMapper;
+import com.proxy.ecpcatalogservice.repository.CategoryRepository;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Service;
 
 @Service
 class CategoryServiceImpl implements CategoryService {
 
-    private final Map<String, Category> categoryMap = new ConcurrentHashMap<>();
+    private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
+
+    public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper) {
+        this.categoryRepository = categoryRepository;
+        this.categoryMapper = categoryMapper;
+    }
 
     @Override
     public CreateCategoryResponse createCategory(CreateCategoryRequest createCategoryRequest) {
+        final var category = categoryMapper.toCategory(createCategoryRequest);
 
-        final var uuid = UUID.randomUUID().toString();
-        final var category = toCategory(createCategoryRequest, uuid);
+        final var savedCategory = categoryRepository.save(category);
 
-        categoryMap.putIfAbsent(uuid, category);
-
-        return toCreateCategoryResponse(category);
+        return categoryMapper.toCreateCategoryResponse(savedCategory);
     }
 
-    private Category toCategory(CreateCategoryRequest createCategoryRequest, String uuid) {
-        final var name = createCategoryRequest.name();
-        final var description = createCategoryRequest.description();
-
-        return new Category(uuid, name, description);
-    }
-
-    private CreateCategoryResponse toCreateCategoryResponse(Category category) {
-        final var uuid = category.id();
-        final var name = category.name();
-        final var description = category.description();
-
-        return new CreateCategoryResponse(uuid, name, description);
-    }
 }
