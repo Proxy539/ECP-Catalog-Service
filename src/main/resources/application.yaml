@@ -1,9 +1,17 @@
 spring:
   application:
     name: ECP-Catalog-Service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
 
 management:
   endpoints:
     web:
       exposure:
         include: "health,info"
+
