@@ -2,8 +2,12 @@ package com.proxy.ecpcatalogservice.controller;
 
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
 import com.proxy.ecpcatalogservice.service.CategoryService;
 import jakarta.validation.Valid;
+
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,5 +27,9 @@ public class CategoryController {
         return categoryService.createCategory(createCategoryRequest);
     }
 
+    @GetMapping("/{id}")
+    public GetCategoryResponse getCategory(@PathVariable UUID id) {
+        return categoryService.getCategory(id);
+    }
 
 }

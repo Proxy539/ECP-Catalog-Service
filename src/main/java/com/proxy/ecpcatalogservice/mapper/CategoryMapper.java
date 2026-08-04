@@ -2,6 +2,7 @@ package com.proxy.ecpcatalogservice.mapper;
 
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
 import com.proxy.ecpcatalogservice.model.Category;
 
 import org.springframework.stereotype.Component;
@@ -17,14 +18,19 @@ public class CategoryMapper {
     }
 
     public CreateCategoryResponse toCreateCategoryResponse(Category category) {
-        final var uuid = category.getId();
+        final var id = category.getId();
         final var name = category.getName();
         final var description = category.getDescription();
 
-        return new CreateCategoryResponse(uuid.toString(), name, description);
+        return new CreateCategoryResponse(id, name, description);
     }
 
+    public GetCategoryResponse tGetCategoryResponse(Category category) {
+        final var id = category.getId();
+        final var name = category.getName();
+        final var description = category.getDescription();
+
+        return new GetCategoryResponse(id, name, description);
+    }
 
 }
-
-
