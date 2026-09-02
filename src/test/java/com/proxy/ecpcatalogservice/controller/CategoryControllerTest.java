@@ -180,4 +180,19 @@ class CategoryControllerTest {
 
     }
 
+    @Test
+    public void givenNoCategoriesExistWhenGetCategoriesThenReturnEmptyList() throws Exception {
+
+        final var getCategoriesResponse = new GetCategoriesResponse(List.of());
+
+        when(categoryService.getCategories()).thenReturn(getCategoriesResponse);
+
+        mockMvc.perform(get(GET_CATEGORIES_API)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.categories").isArray())
+                .andExpect(jsonPath("$.categories").isEmpty());
+
+    }
+
 }
