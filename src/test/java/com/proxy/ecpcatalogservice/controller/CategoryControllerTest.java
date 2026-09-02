@@ -3,6 +3,8 @@ package com.proxy.ecpcatalogservice.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
+import com.proxy.ecpcatalogservice.exception.ResourceNotFoundException;
 import com.proxy.ecpcatalogservice.service.CategoryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +12,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,16 +26,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CategoryController.class)
 class CategoryControllerTest {
 
-    private static final String CATEGORIES_API = "/api/v1/categories";
+    private static final String SAVE_CATEGORIES_API = "/api/v1/categories";
+    private static final String GET_CATEGORIES_API = "/api/v1/categories/{id}";
     private static final String TEST_CATEGORY_NAME = "test category name";
     private static final String TEST_CATEGORY_DESCRIPTION = "test category description";
-    private static final String TEST_CATEGORY_ID = UUID.randomUUID().toString();
+    private static final UUID TEST_CATEGORY_UUID = UUID.randomUUID();
     private static final String BAD_REQUEST_ERROR = "400";
+    private static final String NOT_FOUND_ERROR = "404";
     private static final String VALIDATION_FAILED_MESSAGE = "Validation failed";
     private static final String BLANK_NAME_VALIDATION_ERROR_MESSAGE = "Category name should not be blank";
-    private static final String BLANK_CATEGORY_VALIDATION_ERROR_MESSAGE = "Category description should not be blank";
     private static final String LONG_CATEGORY_NAME_VALIDATION_ERROR_MESSAGE = "Category name should be max 100 characters long";
     private static final String LONG_CATEGORY_DESCRIPTION_VALIDATION_ERROR_MESSAGE = "Category description should be max 500 characters long";
+    private final static String CATEGORY_NOT_FOUND_MESSAGE = "Category not found by id %s";
 
     @Autowired
     private MockMvc mockMvc;
@@ -43,13 +49,14 @@ class CategoryControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    public void givenBlankCreateCategoryRequestFieldsWhenCreateCategoryRequestThenReturnBadRequestError() throws Exception {
+    public void givenBlankCreateCategoryRequestFieldsWhenCreateCategoryRequestThenReturnBadRequestError()
+            throws Exception {
 
         final var invalidCreateCategoryRequest = new CreateCategoryRequest(null, "");
 
-        mockMvc.perform(post(CATEGORIES_API)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidCreateCategoryRequest)))
+        mockMvc.perform(post(SAVE_CATEGORIES_API)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidCreateCategoryRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(BAD_REQUEST_ERROR))
@@ -59,32 +66,72 @@ class CategoryControllerTest {
 
     @Test
     public void givenLongCreateCategoryRequestFieldsWhenCreateCategoryRequestThenReturnBadRequest() throws Exception {
-        final var invalidCreateCategoryRequest = new CreateCategoryRequest(TEST_CATEGORY_NAME.repeat(10), TEST_CATEGORY_DESCRIPTION.repeat(100));
+        final var invalidCreateCategoryRequest = new CreateCategoryRequest(TEST_CATEGORY_NAME.repeat(10),
+                TEST_CATEGORY_DESCRIPTION.repeat(100));
 
-        mockMvc.perform(post(CATEGORIES_API)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidCreateCategoryRequest)))
+        mockMvc.perform(post(SAVE_CATEGORIES_API)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidCreateCategoryRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(BAD_REQUEST_ERROR))
                 .andExpect(jsonPath("$.error").value(VALIDATION_FAILED_MESSAGE))
                 .andExpect(jsonPath("$.errors.name[0]").value(LONG_CATEGORY_NAME_VALIDATION_ERROR_MESSAGE))
-                .andExpect(jsonPath("$.errors.description[0]").value(LONG_CATEGORY_DESCRIPTION_VALIDATION_ERROR_MESSAGE));
+                .andExpect(
+                        jsonPath("$.errors.description[0]").value(LONG_CATEGORY_DESCRIPTION_VALIDATION_ERROR_MESSAGE));
     }
 
     @Test
-    public void givenValidCreateCategoryRequestWhenCreateCategoryRequestThenReturnCreateCategoryResponse() throws Exception {
+    public void givenCategoryNotExistWhenGetCategoryThenReturnNotFound() throws Exception {
+        final var resourceNotFoundException = new ResourceNotFoundException(
+                CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID));
+        when(categoryService.getCategory(TEST_CATEGORY_UUID))
+                .thenThrow(resourceNotFoundException);
+
+        mockMvc.perform(get(GET_CATEGORIES_API, TEST_CATEGORY_UUID)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(NOT_FOUND_ERROR))
+                .andExpect(jsonPath("$.error").value(CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID)));
+
+        verify(categoryService).getCategory(TEST_CATEGORY_UUID);
+    }
+
+    @Test
+    public void givenCategoryExistsWhenGetCategoryThenReturnCategoryResponse() throws Exception {
+        final var getCategoryResponse = new GetCategoryResponse(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME,
+                TEST_CATEGORY_DESCRIPTION);
+
+        when(categoryService.getCategory(TEST_CATEGORY_UUID))
+                .thenReturn(getCategoryResponse);
+
+        mockMvc.perform(get(GET_CATEGORIES_API, TEST_CATEGORY_UUID)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(TEST_CATEGORY_UUID.toString()))
+                .andExpect(jsonPath("$.name").value(TEST_CATEGORY_NAME))
+                .andExpect(jsonPath("$.description").value(TEST_CATEGORY_DESCRIPTION));
+
+        verify(categoryService).getCategory(TEST_CATEGORY_UUID);
+    }
+
+    @Test
+    public void givenValidCreateCategoryRequestWhenCreateCategoryRequestThenReturnCreateCategoryResponse()
+            throws Exception {
         final var validCreateCategoryRequest = new CreateCategoryRequest(TEST_CATEGORY_NAME, TEST_CATEGORY_DESCRIPTION);
-        final var expectedCreateCategoryResponse = new CreateCategoryResponse(TEST_CATEGORY_ID, TEST_CATEGORY_NAME, TEST_CATEGORY_DESCRIPTION);
+        final var expectedCreateCategoryResponse = new CreateCategoryResponse(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME,
+                TEST_CATEGORY_DESCRIPTION);
 
         when(categoryService.createCategory(validCreateCategoryRequest))
                 .thenReturn(expectedCreateCategoryResponse);
 
-        mockMvc.perform(post(CATEGORIES_API)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validCreateCategoryRequest)))
+        mockMvc.perform(post(SAVE_CATEGORIES_API)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validCreateCategoryRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(TEST_CATEGORY_ID))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(jsonPath("$.id").value(TEST_CATEGORY_UUID.toString()))
                 .andExpect(jsonPath("$.name").value(TEST_CATEGORY_NAME))
                 .andExpect(jsonPath("$.description").value(TEST_CATEGORY_DESCRIPTION));
 
@@ -93,19 +140,21 @@ class CategoryControllerTest {
     }
 
     @Test
-    public void givenCreateCategoryRequestWithEmptyDescriptionWhenCreateCategoryRequestThenReturnCreateCategoryResponse() throws Exception {
+    public void givenCreateCategoryRequestWithEmptyDescriptionWhenCreateCategoryRequestThenReturnCreateCategoryResponse()
+            throws Exception {
         final var validCreateCategoryRequest = new CreateCategoryRequest(TEST_CATEGORY_NAME, null);
 
-        final var expectedCreateCategoryResponse = new CreateCategoryResponse(TEST_CATEGORY_ID, TEST_CATEGORY_NAME, null);
+        final var expectedCreateCategoryResponse = new CreateCategoryResponse(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME,
+                null);
 
         when(categoryService.createCategory(validCreateCategoryRequest))
                 .thenReturn(expectedCreateCategoryResponse);
 
-        mockMvc.perform(post(CATEGORIES_API)
+        mockMvc.perform(post(SAVE_CATEGORIES_API)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validCreateCategoryRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(TEST_CATEGORY_ID))
+                .andExpect(jsonPath("$.id").value(TEST_CATEGORY_UUID.toString()))
                 .andExpect(jsonPath("$.name").value(TEST_CATEGORY_NAME));
 
     }
