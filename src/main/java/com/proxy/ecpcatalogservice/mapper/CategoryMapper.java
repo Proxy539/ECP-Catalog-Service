@@ -2,10 +2,13 @@ package com.proxy.ecpcatalogservice.mapper;
 
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
 import com.proxy.ecpcatalogservice.model.Category;
 
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class CategoryMapper {
@@ -25,12 +28,21 @@ public class CategoryMapper {
         return new CreateCategoryResponse(id, name, description);
     }
 
-    public GetCategoryResponse tGetCategoryResponse(Category category) {
+    public GetCategoryResponse toGetCategoryResponse(Category category) {
         final var id = category.getId();
         final var name = category.getName();
         final var description = category.getDescription();
 
         return new GetCategoryResponse(id, name, description);
+    }
+
+    public GetCategoriesResponse toGetCategoriesResponse(List<Category> categories) {
+
+        final var categoriesList = categories.stream()
+                .map(this::toGetCategoryResponse)
+                .toList();
+
+        return new GetCategoriesResponse(categoriesList);
     }
 
 }

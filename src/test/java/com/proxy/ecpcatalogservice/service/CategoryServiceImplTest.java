@@ -5,11 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
 import com.proxy.ecpcatalogservice.exception.ResourceNotFoundException;
 import com.proxy.ecpcatalogservice.mapper.CategoryMapper;
@@ -60,7 +62,7 @@ class CategoryServiceImplTest {
 
         when(categoryRepository.findById(TEST_CATEGORY_UUID))
                 .thenReturn(Optional.of(category));
-        when(categoryMapper.tGetCategoryResponse(category))
+        when(categoryMapper.toGetCategoryResponse(category))
                 .thenReturn(getCategoryResponse);
 
         final var response = categoryService.getCategory(TEST_CATEGORY_UUID);
@@ -68,7 +70,7 @@ class CategoryServiceImplTest {
         assertThat(response).isEqualTo(getCategoryResponse);
 
         verify(categoryRepository).findById(TEST_CATEGORY_UUID);
-        verify(categoryMapper).tGetCategoryResponse(category);
+        verify(categoryMapper).toGetCategoryResponse(category);
     }
 
     @Test
@@ -89,6 +91,25 @@ class CategoryServiceImplTest {
         verify(categoryMapper).toCategory(createCategoryRequest);
         verify(categoryRepository).save(category);
         verify(categoryMapper).toCreateCategoryResponse(category);
+    }
+
+    @Test
+    void givenCategoriesExistWhenGetCategoriesThenReturnGetCategoriesResponse() {
+        final var category = new Category(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME, TEST_CATEGORY_DESCRIPTION);
+        final var categories = List.of(category);
+        final var getCategoryResponse = new GetCategoryResponse(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME, TEST_CATEGORY_DESCRIPTION);
+        final var getCategoriesList = List.of(getCategoryResponse);
+        final var getCategoriesResponse = new GetCategoriesResponse(getCategoriesList);
+
+        when(categoryRepository.findAll()).thenReturn(categories);
+        when(categoryMapper.toGetCategoriesResponse(categories)).thenReturn(getCategoriesResponse);
+
+        final var result = categoryService.getCategories();
+
+        assertThat(result).isEqualTo(getCategoriesResponse);
+
+        verify(categoryRepository).findAll();
+        verify(categoryMapper).toGetCategoriesResponse(categories);
     }
 
 }

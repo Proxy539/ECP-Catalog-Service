@@ -2,6 +2,7 @@ package com.proxy.ecpcatalogservice.controller;
 
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
 import com.proxy.ecpcatalogservice.service.CategoryService;
 import jakarta.validation.Valid;
@@ -30,6 +31,11 @@ public class CategoryController {
     @GetMapping("/{id}")
     public GetCategoryResponse getCategory(@PathVariable UUID id) {
         return categoryService.getCategory(id);
+    }
+
+    @GetMapping
+    public GetCategoriesResponse getCategories() {
+        return categoryService.getCategories();
     }
 
 }
