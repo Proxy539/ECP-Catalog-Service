@@ -3,17 +3,19 @@ package com.proxy.ecpcatalogservice.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
 import com.proxy.ecpcatalogservice.exception.ResourceNotFoundException;
 import com.proxy.ecpcatalogservice.service.CategoryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
@@ -26,8 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CategoryController.class)
 class CategoryControllerTest {
 
+    private static final String GET_CATEGORIES_API = "/api/v1/categories";
     private static final String SAVE_CATEGORIES_API = "/api/v1/categories";
-    private static final String GET_CATEGORIES_API = "/api/v1/categories/{id}";
+    private static final String GET_CATEGORY_BY_ID_API = "/api/v1/categories/{id}";
     private static final String TEST_CATEGORY_NAME = "test category name";
     private static final String TEST_CATEGORY_DESCRIPTION = "test category description";
     private static final UUID TEST_CATEGORY_UUID = UUID.randomUUID();
@@ -42,7 +45,7 @@ class CategoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private CategoryService categoryService;
 
     @Autowired
@@ -55,8 +58,8 @@ class CategoryControllerTest {
         final var invalidCreateCategoryRequest = new CreateCategoryRequest(null, "");
 
         mockMvc.perform(post(SAVE_CATEGORIES_API)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidCreateCategoryRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidCreateCategoryRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(BAD_REQUEST_ERROR))
@@ -70,8 +73,8 @@ class CategoryControllerTest {
                 TEST_CATEGORY_DESCRIPTION.repeat(100));
 
         mockMvc.perform(post(SAVE_CATEGORIES_API)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidCreateCategoryRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidCreateCategoryRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(BAD_REQUEST_ERROR))
@@ -88,8 +91,8 @@ class CategoryControllerTest {
         when(categoryService.getCategory(TEST_CATEGORY_UUID))
                 .thenThrow(resourceNotFoundException);
 
-        mockMvc.perform(get(GET_CATEGORIES_API, TEST_CATEGORY_UUID)
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(GET_CATEGORY_BY_ID_API, TEST_CATEGORY_UUID)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(NOT_FOUND_ERROR))
@@ -106,8 +109,8 @@ class CategoryControllerTest {
         when(categoryService.getCategory(TEST_CATEGORY_UUID))
                 .thenReturn(getCategoryResponse);
 
-        mockMvc.perform(get(GET_CATEGORIES_API, TEST_CATEGORY_UUID)
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(GET_CATEGORY_BY_ID_API, TEST_CATEGORY_UUID)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(TEST_CATEGORY_UUID.toString()))
                 .andExpect(jsonPath("$.name").value(TEST_CATEGORY_NAME))
@@ -127,8 +130,8 @@ class CategoryControllerTest {
                 .thenReturn(expectedCreateCategoryResponse);
 
         mockMvc.perform(post(SAVE_CATEGORIES_API)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateCategoryRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validCreateCategoryRequest)))
                 .andExpect(status().isCreated())
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(jsonPath("$.id").value(TEST_CATEGORY_UUID.toString()))
@@ -151,11 +154,29 @@ class CategoryControllerTest {
                 .thenReturn(expectedCreateCategoryResponse);
 
         mockMvc.perform(post(SAVE_CATEGORIES_API)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateCategoryRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validCreateCategoryRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(TEST_CATEGORY_UUID.toString()))
                 .andExpect(jsonPath("$.name").value(TEST_CATEGORY_NAME));
+
+    }
+
+    @Test
+    public void givenCategoryExistsWhenGetCategoriesThenReturnGetCategoriesResponse() throws Exception {
+
+        final var getCategoryResponse = new GetCategoryResponse(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME, TEST_CATEGORY_DESCRIPTION);
+        final var categories = List.of(getCategoryResponse);
+        final var getCategoriesResponse = new GetCategoriesResponse(categories);
+
+        when(categoryService.getCategories()).thenReturn(getCategoriesResponse);
+
+        mockMvc.perform(get(GET_CATEGORIES_API)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.categories[0].id").value(TEST_CATEGORY_UUID.toString()))
+                .andExpect(jsonPath("$.categories[0].name").value(TEST_CATEGORY_NAME))
+                .andExpect(jsonPath("$.categories[0].description").value(TEST_CATEGORY_DESCRIPTION));
 
     }
 

@@ -2,14 +2,14 @@ package com.proxy.ecpcatalogservice.service;
 
 import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
 import com.proxy.ecpcatalogservice.exception.ResourceNotFoundException;
 import com.proxy.ecpcatalogservice.mapper.CategoryMapper;
 import com.proxy.ecpcatalogservice.repository.CategoryRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-
-import org.springframework.stereotype.Service;
 
 @Service
 class CategoryServiceImpl implements CategoryService {
@@ -39,8 +39,14 @@ class CategoryServiceImpl implements CategoryService {
         final var category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(CATEGORY_NOT_FOUND_MESSAGE.formatted(id)));
 
-        return categoryMapper.tGetCategoryResponse(category);
+        return categoryMapper.toGetCategoryResponse(category);
 
     }
 
+    @Override
+    public GetCategoriesResponse getCategories() {
+        final var categories = categoryRepository.findAll();
+
+        return categoryMapper.toGetCategoriesResponse(categories);
+    }
 }
