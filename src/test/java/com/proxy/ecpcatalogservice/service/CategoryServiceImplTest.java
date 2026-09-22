@@ -136,14 +136,11 @@ class CategoryServiceImplTest {
     void givenCategoryExitsWhenUpdateCategoryThenReturnUpdatedCategoryResponse() {
         final var updateCategoryRequest = new UpdateCategoryRequest(UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
         final var savedCategory = new Category(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME, TEST_CATEGORY_DESCRIPTION);
-        final var updatedCategory = new Category(TEST_CATEGORY_UUID, UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
         final var updateCategoryResponse = new UpdateCategoryResponse(TEST_CATEGORY_UUID, UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
 
         when(categoryRepository.findById(TEST_CATEGORY_UUID))
                 .thenReturn(Optional.of(savedCategory));
-        when(categoryRepository.save(savedCategory))
-                .thenReturn(updatedCategory);
-        when(categoryMapper.toUpdateCategoryResponse(updatedCategory))
+        when(categoryMapper.toUpdateCategoryResponse(savedCategory))
                 .thenReturn(updateCategoryResponse);
 
         final var result = categoryService.updateCategory(TEST_CATEGORY_UUID, updateCategoryRequest);
@@ -152,8 +149,7 @@ class CategoryServiceImplTest {
 
         verify(categoryRepository).findById(TEST_CATEGORY_UUID);
         verify(categoryMapper).updateCategory(savedCategory, updateCategoryRequest);
-        verify(categoryRepository).save(savedCategory);
-        verify(categoryMapper).toUpdateCategoryResponse(updatedCategory);
+        verify(categoryMapper).toUpdateCategoryResponse(savedCategory);
     }
 
     @Test

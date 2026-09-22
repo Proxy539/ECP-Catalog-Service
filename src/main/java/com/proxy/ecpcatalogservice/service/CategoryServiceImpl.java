@@ -8,13 +8,14 @@ import com.proxy.ecpcatalogservice.dto.UpdateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.UpdateCategoryResponse;
 import com.proxy.ecpcatalogservice.exception.ResourceNotFoundException;
 import com.proxy.ecpcatalogservice.mapper.CategoryMapper;
-import com.proxy.ecpcatalogservice.model.Category;
 import com.proxy.ecpcatalogservice.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Service
+@Transactional(readOnly = true)
 class CategoryServiceImpl implements CategoryService {
 
     private final static String CATEGORY_NOT_FOUND_MESSAGE = "Category not found by id %s";
@@ -28,6 +29,7 @@ class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CreateCategoryResponse createCategory(CreateCategoryRequest createCategoryRequest) {
         final var category = categoryMapper.toCategory(createCategoryRequest);
 
@@ -54,17 +56,18 @@ class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public UpdateCategoryResponse updateCategory(UUID id, UpdateCategoryRequest updateCategoryRequest) {
         final var savedCategory = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(CATEGORY_NOT_FOUND_MESSAGE.formatted(id)));
 
         categoryMapper.updateCategory(savedCategory, updateCategoryRequest);
-        final var updatedCategory = categoryRepository.save(savedCategory);
 
-        return categoryMapper.toUpdateCategoryResponse(updatedCategory);
+        return categoryMapper.toUpdateCategoryResponse(savedCategory);
     }
 
     @Override
+    @Transactional
     public void deleteCategory(UUID id) {
 
         final var savedCategory = categoryRepository.findById(id)
