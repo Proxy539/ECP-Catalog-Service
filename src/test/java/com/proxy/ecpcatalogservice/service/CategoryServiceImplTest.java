@@ -157,9 +157,27 @@ class CategoryServiceImplTest {
     @Test
     void givenCategoryExistsWhenDeleteCategoryThenDeleteCategory() {
 
+        final var savedCategory = new Category(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME, TEST_CATEGORY_DESCRIPTION);
+
+        when(categoryRepository.findById(TEST_CATEGORY_UUID))
+                .thenReturn(Optional.of(savedCategory));
+
         categoryService.deleteCategory(TEST_CATEGORY_UUID);
 
-        verify(categoryRepository).deleteById(TEST_CATEGORY_UUID);
+        verify(categoryRepository).findById(TEST_CATEGORY_UUID);
+        verify(categoryRepository).delete(savedCategory);
+    }
+
+    @Test
+    void givenCategoryNotExistsWhenDeleteCategoryThenThrowNotFoundException() {
+        when(categoryRepository.findById(TEST_CATEGORY_UUID))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoryService.deleteCategory(TEST_CATEGORY_UUID))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID));
+
+        verify(categoryRepository).findById(TEST_CATEGORY_UUID);
     }
 
 }

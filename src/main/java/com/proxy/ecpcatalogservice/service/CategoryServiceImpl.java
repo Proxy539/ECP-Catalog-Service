@@ -66,6 +66,10 @@ class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void deleteCategory(UUID id) {
-        categoryRepository.deleteById(id);
+
+        final var savedCategory = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(CATEGORY_NOT_FOUND_MESSAGE.formatted(id)));
+
+        categoryRepository.delete(savedCategory);
     }
 }

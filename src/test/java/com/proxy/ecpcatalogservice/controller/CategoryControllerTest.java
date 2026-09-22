@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -269,6 +270,22 @@ class CategoryControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(categoryService).deleteCategory(TEST_CATEGORY_UUID);
+    }
+
+    @Test
+    public void givenCategoryNotExistsWhenDeleteCategoryThenThrowNotFoundException() throws Exception {
+
+        final var resourceNotFoundException = new ResourceNotFoundException(
+                CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID));
+
+        doThrow(resourceNotFoundException).when(categoryService).deleteCategory(TEST_CATEGORY_UUID);
+
+        mockMvc.perform(delete(DELETE_CATEGORY_API, TEST_CATEGORY_UUID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(NOT_FOUND_ERROR))
+                .andExpect(jsonPath("$.error").value(CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID)));
+
     }
 
 }
