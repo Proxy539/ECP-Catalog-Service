@@ -13,6 +13,8 @@ import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryRequest;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryResponse;
 import com.proxy.ecpcatalogservice.exception.ResourceNotFoundException;
 import com.proxy.ecpcatalogservice.mapper.CategoryMapper;
 import com.proxy.ecpcatalogservice.model.Category;
@@ -30,6 +32,8 @@ class CategoryServiceImplTest {
     private static final UUID TEST_CATEGORY_UUID = UUID.randomUUID();
     private static final String TEST_CATEGORY_NAME = "test category name";
     private static final String TEST_CATEGORY_DESCRIPTION = "test category description";
+    private static final String UPDATE_CATEGORY_NAME = "update category name";
+    private static final String UPDATE_CATEGORY_DESCRIPTION = "update category description";
 
     private final static String CATEGORY_NOT_FOUND_MESSAGE = "Category not found by id %s";
 
@@ -110,6 +114,44 @@ class CategoryServiceImplTest {
 
         verify(categoryRepository).findAll();
         verify(categoryMapper).toGetCategoriesResponse(categories);
+    }
+
+    @Test
+    void givenCategoryNotExistsWhenUpdateCategoryThenReturnNotFoundException() {
+        final var updateCategoryRequest = new UpdateCategoryRequest(UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
+
+        when(categoryRepository.findById(TEST_CATEGORY_UUID))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoryService.updateCategory(TEST_CATEGORY_UUID, updateCategoryRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID));
+
+        verify(categoryRepository).findById(TEST_CATEGORY_UUID);
+    }
+
+    @Test
+    void givenCategoryExitsWhenUpdateCategoryThenReturnUpdatedCategoryResponse() {
+        final var updateCategoryRequest = new UpdateCategoryRequest(UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
+        final var savedCategory = new Category(TEST_CATEGORY_UUID, TEST_CATEGORY_NAME, TEST_CATEGORY_DESCRIPTION);
+        final var updatedCategory = new Category(TEST_CATEGORY_UUID, UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
+        final var updateCategoryResponse = new UpdateCategoryResponse(TEST_CATEGORY_UUID, UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
+
+        when(categoryRepository.findById(TEST_CATEGORY_UUID))
+                .thenReturn(Optional.of(savedCategory));
+        when(categoryRepository.save(savedCategory))
+                .thenReturn(updatedCategory);
+        when(categoryMapper.toUpdateCategoryResponse(updatedCategory))
+                .thenReturn(updateCategoryResponse);
+
+        final var result = categoryService.updateCategory(TEST_CATEGORY_UUID, updateCategoryRequest);
+
+        assertThat(result).isEqualTo(updateCategoryResponse);
+
+        verify(categoryRepository).findById(TEST_CATEGORY_UUID);
+        verify(categoryMapper).updateCategory(savedCategory, updateCategoryRequest);
+        verify(categoryRepository).save(savedCategory);
+        verify(categoryMapper).toUpdateCategoryResponse(updatedCategory);
     }
 
 }

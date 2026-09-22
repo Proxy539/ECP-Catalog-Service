@@ -4,6 +4,8 @@ import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryRequest;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryResponse;
 import com.proxy.ecpcatalogservice.service.CategoryService;
 import jakarta.validation.Valid;
 
@@ -36,6 +38,11 @@ public class CategoryController {
     @GetMapping
     public GetCategoriesResponse getCategories() {
         return categoryService.getCategories();
+    }
+
+    @PutMapping("/{id}")
+    public UpdateCategoryResponse updateCategory(@PathVariable UUID id, @Valid @RequestBody UpdateCategoryRequest updateCategoryRequest) {
+        return categoryService.updateCategory(id, updateCategoryRequest);
     }
 
 }

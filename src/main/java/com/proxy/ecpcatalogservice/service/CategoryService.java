@@ -6,6 +6,9 @@ import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryRequest;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryResponse;
+import jakarta.validation.Valid;
 
 public interface CategoryService {
 
@@ -14,4 +17,6 @@ public interface CategoryService {
     GetCategoryResponse getCategory(UUID id);
 
     GetCategoriesResponse getCategories();
+
+    UpdateCategoryResponse updateCategory(UUID categoryUUID, UpdateCategoryRequest updateCategoryRequest);
 }
