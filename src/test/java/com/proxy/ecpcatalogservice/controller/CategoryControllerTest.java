@@ -227,4 +227,38 @@ class CategoryControllerTest {
 
     }
 
+    @Test
+    public void givenCategoryNotExistWhenUpdateCategoryThenReturnNotFound() throws Exception {
+        final var updateCategoryRequest = new UpdateCategoryRequest(UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
+        final var resourceNotFoundException = new ResourceNotFoundException(
+                CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID));
+
+        when(categoryService.updateCategory(TEST_CATEGORY_UUID, updateCategoryRequest))
+                .thenThrow(resourceNotFoundException);
+
+        mockMvc.perform(put(UPDATE_CATEGORY_API, TEST_CATEGORY_UUID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateCategoryRequest)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(NOT_FOUND_ERROR))
+                .andExpect(jsonPath("$.error").value(CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID)));
+
+        verify(categoryService).updateCategory(TEST_CATEGORY_UUID, updateCategoryRequest);
+    }
+
+    @Test
+    public void givenBlankUpdateCategoryRequestFieldsWhenUpdateCategoryThenReturnBadRequest() throws Exception {
+        final var invalidUpdateCategoryRequest = new UpdateCategoryRequest(null, "");
+
+        mockMvc.perform(put(UPDATE_CATEGORY_API, TEST_CATEGORY_UUID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidUpdateCategoryRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(BAD_REQUEST_ERROR))
+                .andExpect(jsonPath("$.error").value(VALIDATION_FAILED_MESSAGE))
+                .andExpect(jsonPath("$.errors.name[0]").value(BLANK_NAME_VALIDATION_ERROR_MESSAGE));
+    }
+
 }
