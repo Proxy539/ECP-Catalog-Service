@@ -63,4 +63,13 @@ class CategoryServiceImpl implements CategoryService {
 
         return categoryMapper.toUpdateCategoryResponse(updatedCategory);
     }
+
+    @Override
+    public void deleteCategory(UUID id) {
+
+        final var savedCategory = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(CATEGORY_NOT_FOUND_MESSAGE.formatted(id)));
+
+        categoryRepository.delete(savedCategory);
+    }
 }
