@@ -2,6 +2,8 @@ package com.proxy.ecpcatalogservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -178,6 +180,7 @@ class CategoryServiceImplTest {
                 .hasMessage(CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID));
 
         verify(categoryRepository).findById(TEST_CATEGORY_UUID);
+        verify(categoryRepository, never()).delete(any());
     }
 
 }

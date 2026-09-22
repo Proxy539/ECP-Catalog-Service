@@ -265,7 +265,7 @@ class CategoryControllerTest {
     }
 
     @Test
-    public void givenCategoryExistsWhenDeleteCategoryThenDeleteCategory() throws Exception {
+    public void givenCategoryExistsWhenDeleteCategoryThenReturnNoContent() throws Exception {
         mockMvc.perform(delete(DELETE_CATEGORY_API, TEST_CATEGORY_UUID))
                 .andExpect(status().isNoContent());
 
@@ -273,7 +273,7 @@ class CategoryControllerTest {
     }
 
     @Test
-    public void givenCategoryNotExistsWhenDeleteCategoryThenThrowNotFoundException() throws Exception {
+    public void givenCategoryNotExistsWhenDeleteCategoryThenReturnNotFound() throws Exception {
 
         final var resourceNotFoundException = new ResourceNotFoundException(
                 CATEGORY_NOT_FOUND_MESSAGE.formatted(TEST_CATEGORY_UUID));
