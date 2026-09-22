@@ -63,4 +63,9 @@ class CategoryServiceImpl implements CategoryService {
 
         return categoryMapper.toUpdateCategoryResponse(updatedCategory);
     }
+
+    @Override
+    public void deleteCategory(UUID id) {
+        categoryRepository.deleteById(id);
+    }
 }

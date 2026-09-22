@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -35,6 +36,7 @@ class CategoryControllerTest {
     private static final String SAVE_CATEGORIES_API = "/api/v1/categories";
     private static final String GET_CATEGORY_BY_ID_API = "/api/v1/categories/{id}";
     private static final String UPDATE_CATEGORY_API = "/api/v1/categories/{id}";
+    private static final String DELETE_CATEGORY_API = "/api/v1/categories/{id}";
     private static final String TEST_CATEGORY_NAME = "test category name";
     private static final String TEST_CATEGORY_DESCRIPTION = "test category description";
     private static final String UPDATE_CATEGORY_NAME = "update category name";
@@ -259,6 +261,14 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.status").value(BAD_REQUEST_ERROR))
                 .andExpect(jsonPath("$.error").value(VALIDATION_FAILED_MESSAGE))
                 .andExpect(jsonPath("$.errors.name[0]").value(BLANK_NAME_VALIDATION_ERROR_MESSAGE));
+    }
+
+    @Test
+    public void givenCategoryExistsWhenDeleteCategoryThenDeleteCategory() throws Exception {
+        mockMvc.perform(delete(DELETE_CATEGORY_API, TEST_CATEGORY_UUID))
+                .andExpect(status().isNoContent());
+
+        verify(categoryService).deleteCategory(TEST_CATEGORY_UUID);
     }
 
 }

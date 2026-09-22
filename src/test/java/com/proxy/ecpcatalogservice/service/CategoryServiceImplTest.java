@@ -154,4 +154,12 @@ class CategoryServiceImplTest {
         verify(categoryMapper).toUpdateCategoryResponse(updatedCategory);
     }
 
+    @Test
+    void givenCategoryExistsWhenDeleteCategoryThenDeleteCategory() {
+
+        categoryService.deleteCategory(TEST_CATEGORY_UUID);
+
+        verify(categoryRepository).deleteById(TEST_CATEGORY_UUID);
+    }
+
 }
