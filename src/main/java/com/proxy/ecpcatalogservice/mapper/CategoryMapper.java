@@ -4,8 +4,9 @@ import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryRequest;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryResponse;
 import com.proxy.ecpcatalogservice.model.Category;
-
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -43,6 +44,19 @@ public class CategoryMapper {
                 .toList();
 
         return new GetCategoriesResponse(categoriesList);
+    }
+
+    public UpdateCategoryResponse toUpdateCategoryResponse(Category category) {
+        final var id = category.getId();
+        final var name = category.getName();
+        final var description = category.getDescription();
+
+        return new UpdateCategoryResponse(id, name, description);
+    }
+
+    public void updateCategory(Category category, UpdateCategoryRequest updateCategoryRequest) {
+        category.setName(updateCategoryRequest.name());
+        category.setDescription(updateCategoryRequest.description());
     }
 
 }

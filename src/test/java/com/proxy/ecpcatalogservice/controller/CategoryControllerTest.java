@@ -5,6 +5,8 @@ import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryRequest;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryResponse;
 import com.proxy.ecpcatalogservice.exception.ResourceNotFoundException;
 import com.proxy.ecpcatalogservice.service.CategoryService;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -31,8 +34,11 @@ class CategoryControllerTest {
     private static final String GET_CATEGORIES_API = "/api/v1/categories";
     private static final String SAVE_CATEGORIES_API = "/api/v1/categories";
     private static final String GET_CATEGORY_BY_ID_API = "/api/v1/categories/{id}";
+    private static final String UPDATE_CATEGORY_API = "/api/v1/categories/{id}";
     private static final String TEST_CATEGORY_NAME = "test category name";
     private static final String TEST_CATEGORY_DESCRIPTION = "test category description";
+    private static final String UPDATE_CATEGORY_NAME = "update category name";
+    private static final String UPDATE_CATEGORY_DESCRIPTION = "update category description";
     private static final UUID TEST_CATEGORY_UUID = UUID.randomUUID();
     private static final String BAD_REQUEST_ERROR = "400";
     private static final String NOT_FOUND_ERROR = "404";
@@ -160,6 +166,8 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.id").value(TEST_CATEGORY_UUID.toString()))
                 .andExpect(jsonPath("$.name").value(TEST_CATEGORY_NAME));
 
+        verify(categoryService).createCategory(validCreateCategoryRequest);
+
     }
 
     @Test
@@ -178,6 +186,8 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.categories[0].name").value(TEST_CATEGORY_NAME))
                 .andExpect(jsonPath("$.categories[0].description").value(TEST_CATEGORY_DESCRIPTION));
 
+        verify(categoryService).getCategories();
+
     }
 
     @Test
@@ -192,6 +202,28 @@ class CategoryControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.categories").isArray())
                 .andExpect(jsonPath("$.categories").isEmpty());
+
+        verify(categoryService).getCategories();
+
+    }
+
+    @Test
+    public void givenCategoryExistsWhenUpdateCategoryThenReturnUpdatedCategory() throws Exception {
+        final var updateCategoryRequest = new UpdateCategoryRequest(UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
+        final var updateCategoryResponse = new UpdateCategoryResponse(TEST_CATEGORY_UUID, UPDATE_CATEGORY_NAME, UPDATE_CATEGORY_DESCRIPTION);
+
+        when(categoryService.updateCategory(TEST_CATEGORY_UUID, updateCategoryRequest))
+                .thenReturn(updateCategoryResponse);
+
+        mockMvc.perform(put(UPDATE_CATEGORY_API, TEST_CATEGORY_UUID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateCategoryRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(TEST_CATEGORY_UUID.toString()))
+                .andExpect(jsonPath("$.name").value(UPDATE_CATEGORY_NAME))
+                .andExpect(jsonPath("$.description").value(UPDATE_CATEGORY_DESCRIPTION));
+
+        verify(categoryService).updateCategory(TEST_CATEGORY_UUID, updateCategoryRequest);
 
     }
 

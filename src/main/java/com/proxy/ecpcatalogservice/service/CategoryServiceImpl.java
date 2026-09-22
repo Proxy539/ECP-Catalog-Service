@@ -4,8 +4,11 @@ import com.proxy.ecpcatalogservice.dto.CreateCategoryRequest;
 import com.proxy.ecpcatalogservice.dto.CreateCategoryResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoriesResponse;
 import com.proxy.ecpcatalogservice.dto.GetCategoryResponse;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryRequest;
+import com.proxy.ecpcatalogservice.dto.UpdateCategoryResponse;
 import com.proxy.ecpcatalogservice.exception.ResourceNotFoundException;
 import com.proxy.ecpcatalogservice.mapper.CategoryMapper;
+import com.proxy.ecpcatalogservice.model.Category;
 import com.proxy.ecpcatalogservice.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
@@ -48,5 +51,16 @@ class CategoryServiceImpl implements CategoryService {
         final var categories = categoryRepository.findAll();
 
         return categoryMapper.toGetCategoriesResponse(categories);
+    }
+
+    @Override
+    public UpdateCategoryResponse updateCategory(UUID id, UpdateCategoryRequest updateCategoryRequest) {
+        final var savedCategory = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(CATEGORY_NOT_FOUND_MESSAGE.formatted(id)));
+
+        categoryMapper.updateCategory(savedCategory, updateCategoryRequest);
+        final var updatedCategory = categoryRepository.save(savedCategory);
+
+        return categoryMapper.toUpdateCategoryResponse(updatedCategory);
     }
 }
